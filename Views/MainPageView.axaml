@@ -1,0 +1,368 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MinecraftServerLauncher.ViewModels"
+             xmlns:views="using:MinecraftServerLauncher.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1260" d:DesignHeight="730"
+             x:Class="MinecraftServerLauncher.Views.MainPageView"
+             x:DataType="vm:MainPageViewModel">
+
+    <UserControl.Styles>
+        <!-- 实例块内的按钮：小尺寸、紧凑 -->
+        <Style Selector="Button.cell">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="2,0" />
+            <Setter Property="MinHeight" Value="20" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Foreground" Value="#333333" />
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#C9CFD8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="CornerRadius" Value="3" />
+        </Style>
+        <Style Selector="Button.cell:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#E8EFF9" />
+            <Setter Property="TextBlock.Foreground" Value="#1E3F6F" />
+        </Style>
+
+        <!-- 实例块内的标签：小号灰字 -->
+        <Style Selector="TextBlock.caption">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="#8A8A8E" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.value">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#333333" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <!-- 服务器实例块列表：选中/悬停用浅蓝底，避免默认强调色盖住整块内容 -->
+        <Style Selector="ListBox.serverList ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="ListBox.serverList ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F0F4FA" />
+        </Style>
+        <Style Selector="ListBox.serverList ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#DCE7F7" />
+        </Style>
+
+        <!-- 控制台日志行 -->
+        <Style Selector="ListBox.consoleList">
+            <Setter Property="Background" Value="#1E1E1E" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="4" />
+        </Style>
+        <Style Selector="ListBox.consoleList ListBoxItem">
+            <Setter Property="Padding" Value="2,0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <!-- 多选高亮：默认 Fluent 选中色在深色控制台上不够明显 -->
+        <Style Selector="ListBox.consoleList ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2A2D2E" />
+        </Style>
+        <Style Selector="ListBox.consoleList ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#264F78" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="300,*">
+
+        <!-- ============================================================
+             左侧：服务器实例块列表（n 个实例块 + 1 个“+”块）
+             ============================================================ -->
+        <DockPanel Grid.Column="0">
+
+            <Border DockPanel.Dock="Top" Background="#FFFFFF"
+                    BorderBrush="#E1E4E8" BorderThickness="0,0,0,1" Padding="10,8">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="服务器实例" FontWeight="Bold" FontSize="13" Foreground="#333333" />
+                    <TextBlock Text="{Binding Servers.Count, StringFormat=' ({0})'}"
+                               FontSize="12" Foreground="#8A8A8E" VerticalAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+            <!-- 第 n+1 个块：新增服务器实例 -->
+            <Button DockPanel.Dock="Bottom"
+                    Command="{Binding AddServerInstanceCommand}"
+                    Margin="8" Padding="10,10"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    Background="#FFFFFF"
+                    BorderBrush="#B9C4D4" BorderThickness="1"
+                    CornerRadius="6"
+                    ToolTip.Tip="前往“服务器实例配置”页新增服务器实例">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="＋" FontSize="16" FontWeight="Bold"
+                               Foreground="#2B579A" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <TextBlock Text="新增服务器实例" FontSize="13" Foreground="#2B579A"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+            <!-- n 个服务器实例块 -->
+            <ListBox Name="ServerList"
+                     ItemsSource="{Binding Servers}"
+                     SelectedItem="{Binding SelectedServer}"
+                     Classes="serverList"
+                     Background="#EDEFF2"
+                     BorderThickness="0"
+                     Padding="8"
+                     SelectionMode="Single">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ServerItemViewModel">
+
+                        <!-- 实例块：三行 × 四列，与设计图一致 -->
+                        <Border Margin="0,0,0,8"
+                                Background="#FFFFFF"
+                                BorderBrush="#C9CFD8"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                ClipToBounds="True"
+                                ToolTip.Tip="{Binding Path}">
+                            <Grid ColumnDefinitions="56,*,*,78" RowDefinitions="Auto,Auto,Auto">
+
+                                <!-- 第 1 行：ICON（跨前两行） / 名称（跨两列） / 启停 -->
+                                <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                                        Background="#F7F8FA"
+                                        BorderBrush="#C9CFD8" BorderThickness="0,0,1,1">
+                                    <Panel>
+                                        <Image Source="{Binding Icon}"
+                                               Width="44" Height="44" Margin="4"
+                                               Stretch="UniformToFill"
+                                               IsVisible="{Binding HasIcon}" />
+                                        <TextBlock Text="🖥" FontSize="22"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   IsVisible="{Binding HasNoIcon}" />
+                                    </Panel>
+                                </Border>
+
+                                <Border Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
+                                        BorderBrush="#C9CFD8" BorderThickness="0,0,0,1" Padding="8,4">
+                                    <!-- 用 Grid 而不是横向 StackPanel：StackPanel 以无限宽度测量子元素，
+                                         名称与状态文字拿不到宽度约束，长名字会顶出格子 -->
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="13"
+                                                   FontWeight="Bold" Foreground="#222222"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip.Tip="{Binding Name}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding StatusText}" FontSize="10"
+                                                   Foreground="{Binding StatusColor}"
+                                                   VerticalAlignment="Center" Margin="6,1,0,0" />
+                                    </Grid>
+                                </Border>
+
+                                <Border Grid.Row="0" Grid.Column="3" Grid.RowSpan="3"
+                                        BorderBrush="#C9CFD8" BorderThickness="1,0,0,0"
+                                        Background="#FAFBFC" Padding="4">
+                                    <Grid RowDefinitions="*,*,*">
+                                        <Button Grid.Row="0" Classes="cell"
+                                                Content="{Binding StartStopText}"
+                                                Command="{Binding ToggleStartStopCommand}"
+                                                ToolTip.Tip="启动 / 停止该服务器实例" />
+                                        <Button Grid.Row="1" Classes="cell"
+                                                Content="{Binding HideText}"
+                                                Command="{Binding ToggleHideCommand}"
+                                                ToolTip.Tip="隐藏 / 显示该服务器在控制台中的输出" />
+                                        <Button Grid.Row="2" Classes="cell"
+                                                Content="{Binding LockText}"
+                                                Command="{Binding ToggleLockCommand}"
+                                                ToolTip.Tip="锁定后禁止 run/stop/send/rm/del" />
+                                    </Grid>
+                                </Border>
+
+                                <!-- 第 2 / 3 行的数据格：标签在上、数值在下。
+                                     纵向排布让数值独占整格宽度，像 “内存占用 1024 MB” 这种
+                                     横向排不下的内容不会再顶出格子（横向 StackPanel 没有宽度约束，
+                                     TextTrimming 也就永远不会生效）。 -->
+                                <Border Grid.Row="1" Grid.Column="1"
+                                        BorderBrush="#C9CFD8" BorderThickness="0,0,1,1" Padding="8,4">
+                                    <StackPanel>
+                                        <TextBlock Classes="caption" Text="端口" />
+                                        <TextBlock Classes="value" Text="{Binding PortText}"
+                                                   ToolTip.Tip="server.properties 中的 server-port" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Row="1" Grid.Column="2"
+                                        BorderBrush="#C9CFD8" BorderThickness="0,0,0,1" Padding="8,4">
+                                    <StackPanel>
+                                        <TextBlock Classes="caption" Text="玩家" />
+                                        <TextBlock Classes="value" Text="{Binding PlayerText}"
+                                                   ToolTip.Tip="在线/上限，来自 Query 协议；未启动显示 /" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                        BorderBrush="#C9CFD8" BorderThickness="0,0,1,0" Padding="8,4">
+                                    <StackPanel>
+                                        <TextBlock Classes="caption" Text="CPU占用" />
+                                        <TextBlock Classes="value" Text="{Binding CpuText}"
+                                                   ToolTip.Tip="取自服务器进程；未启动显示 /" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Row="2" Grid.Column="2"
+                                        BorderBrush="#C9CFD8" BorderThickness="0,0,0,0" Padding="8,4">
+                                    <StackPanel>
+                                        <TextBlock Classes="caption" Text="内存占用" />
+                                        <TextBlock Classes="value" Text="{Binding MemoryText}"
+                                                   ToolTip.Tip="工作集大小，取自服务器进程；未启动显示 /" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+
+        <!-- ============================================================
+             右侧：控制台
+             ============================================================ -->
+        <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
+
+            <!-- 控制台标题 -->
+            <Border Grid.Row="0" Background="#FFFFFF"
+                    BorderBrush="#E1E4E8" BorderThickness="0,0,0,1" Padding="10,8">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                    <TextBlock Grid.Column="0" Text="控制台" FontWeight="Bold" FontSize="13"
+                               Foreground="#333333" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Margin="10,0" FontSize="12" Foreground="#8A8A8E"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                               Text="{Binding HighlightedServerName, StringFormat='当前服务器：{0}'}" />
+                    <Button Grid.Column="2" Name="CopyLogsButton" Content="复制选中" FontSize="12"
+                            Padding="10,2" Margin="0,0,6,0"
+                            ToolTip.Tip="把选中的日志行复制到剪贴板（按住 Ctrl 或 Shift 多选）" />
+                    <Button Grid.Column="3" Content="清空" FontSize="12" Padding="10,2"
+                            Command="{Binding ClearLogsCommand}" ToolTip.Tip="仅清空界面显示，不影响日志文件" />
+                </Grid>
+            </Border>
+
+            <!-- 控制台输出 -->
+            <ListBox Grid.Row="1"
+                     Name="ConsoleList"
+                     Classes="consoleList"
+                     ItemsSource="{Binding Logs}"
+                     SelectionMode="Multiple">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LogEntryViewModel">
+                        <!-- 整行放在同一个 TextBlock 里。
+                             之前用横向 StackPanel 分列，StackPanel 以无限宽度测量子元素，
+                             消息拿不到宽度约束，既不会换行（长文本被裁掉），
+                             续行位置也随前缀宽度漂移。
+                             改成一个 TextBlock 后消息会正常换行，
+                             整行统一留出 4 个空格（等宽字体下约 24px）的缩进。
+                             颜色与 MSL-CLI 一致：整个行按其级别着色（不是只染前缀）。 -->
+                        <TextBlock Text="{Binding Display}"
+                                   FontFamily="Consolas"
+                                   FontSize="12"
+                                   Foreground="{Binding LevelBrush}"
+                                   FontWeight="{Binding LevelWeight}"
+                                   TextWrapping="Wrap"
+                                   Padding="24,0,0,0" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- 上拉目标列表：贴在控制台底部（也就是输入区正上方）展开 -->
+            <Border Grid.Row="1"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Left"
+                    Margin="8,0,0,8"
+                    MinWidth="300"
+                    MaxHeight="360"
+                    Background="#FFFFFF"
+                    BorderBrush="#B9C4D4"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    BoxShadow="0 -4 14 0 #33000000"
+                    IsVisible="{Binding IsTargetListOpen}">
+                <!-- SelectedItem 只做单向绑定：双向时列表在初始化 / 重载 ItemsSource 时
+                     会把选中项写回 null，进而把刚展开的列表立刻关掉。
+                     用户点选的结果由代码后置里的 SelectionChanged 写回视图模型。 -->
+                <ListBox Name="TargetList"
+                         ItemsSource="{Binding Targets}"
+                         SelectedItem="{Binding SelectedTarget, Mode=OneWay}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Padding="4">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ConsoleTarget">
+                            <TextBlock Text="{Binding Display}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <!-- 输入区：上行可变长输入框，下行目标下拉框（上拉）/ 启用 Agent / 发送 -->
+            <Border Grid.Row="2" Background="#FFFFFF"
+                    BorderBrush="#E1E4E8" BorderThickness="0,1,0,0" Padding="8,6">
+                <StackPanel>
+
+                    <views:ConsoleTextBox Name="ConsoleInput"
+                                          Text="{Binding InputText}"
+                                          AcceptsReturn="True"
+                                          TextWrapping="Wrap"
+                                          MinHeight="36"
+                                          MaxHeight="150"
+                                          FontFamily="Consolas"
+                                          FontSize="13"
+                                          VerticalContentAlignment="Top"
+                                          IsEnabled="{Binding IsInputEnabled}"
+                                          PlaceholderText="输入 Minecraft 命令或聊天内容；以 $ 开头按命令执行。Enter 发送，Shift+Enter 换行" />
+
+                    <Grid Margin="0,6,0,0" ColumnDefinitions="Auto,Auto,Auto,*,Auto">
+
+                        <!-- 目标下拉框：AI 实例与服务器实例合并在一个列表里，用前缀区分。
+                             Avalonia 12 的 ComboBox 没有 Placement 属性，无法指定向上弹出，
+                             因此自己做一个向上展开的列表：点按钮展开，列表覆盖在控制台上方。 -->
+                        <Button Grid.Column="0"
+                                MinWidth="240" Height="30"
+                                Padding="10,0"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Center"
+                                Command="{Binding ToggleTargetListCommand}"
+                                ToolTip.Tip="选择控制台输入的目标：AI-xxx 为 AI 实例，服务器-xxx 为服务器控制台">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="{Binding SelectedTarget.Display}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="1" Text="▴" FontSize="10" Foreground="#8A8A8E"
+                                           VerticalAlignment="Center" Margin="8,0,0,0" />
+                            </Grid>
+                        </Button>
+
+                        <!-- AI 目标：启用 Agent（被实例的能力开关锁定时禁用） -->
+                        <CheckBox Grid.Column="1"
+                                  Content="启用 Agent"
+                                  IsVisible="{Binding IsAiMode}"
+                                  IsChecked="{Binding UseAgent}"
+                                  IsEnabled="{Binding CanToggleAgent}"
+                                  ToolTip.Tip="{Binding AgentLockReason}"
+                                  Margin="10,0,0,0"
+                                  VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Column="2" Margin="8,0,0,0" FontSize="11" Foreground="#B26A00"
+                                   VerticalAlignment="Center" TextWrapping="NoWrap"
+                                   IsVisible="{Binding IsAiMode}"
+                                   Text="{Binding AgentLockReason}" />
+
+                        <Button Grid.Column="4" Content="发送" Height="30" MinWidth="70"
+                                Command="{Binding SendCommand}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

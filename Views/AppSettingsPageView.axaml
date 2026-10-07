@@ -1,0 +1,91 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MinecraftServerLauncher.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1260" d:DesignHeight="730"
+             x:Class="MinecraftServerLauncher.Views.AppSettingsPageView"
+             x:DataType="vm:AppSettingsPageViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#333333" />
+        </Style>
+        <Style Selector="TextBlock.hint">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#8A8A8E" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel Margin="16" Spacing="14">
+
+            <StackPanel Spacing="4">
+                <TextBlock Classes="sectionTitle" Text="APP 设置" />
+                <TextBlock Classes="hint"
+                           Text="所有改动都经命令层写回配置文件（$app cfg set / $ai default），与命令行版本共用同一份配置。" />
+            </StackPanel>
+
+            <!-- 状态刷新 -->
+            <Border Background="#FFFFFF" BorderBrush="#DDE1E6" BorderThickness="1"
+                    CornerRadius="6" Padding="14">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="sectionTitle" Text="实例状态刷新" FontSize="13" />
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,*">
+                        <TextBlock Grid.Column="0" Text="刷新间隔（毫秒）" VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+                        <TextBox Grid.Column="1" Width="120" Text="{Binding QueryIntervalText}"
+                                 VerticalContentAlignment="Center" />
+                        <Button Grid.Column="2" Content="应用" Margin="10,0,0,0" MinWidth="80"
+                                Command="{Binding ApplyIntervalCommand}" />
+                    </Grid>
+                    <TextBlock Classes="hint" Text="{Binding IntervalRangeHint}" />
+                </StackPanel>
+            </Border>
+
+            <!-- AI 总开关与默认配置 -->
+            <Border Background="#FFFFFF" BorderBrush="#DDE1E6" BorderThickness="1"
+                    CornerRadius="6" Padding="14">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="sectionTitle" Text="AI" FontSize="13" />
+                    <CheckBox Content="启用 AI 功能（EnableAI）" IsChecked="{Binding EnableAi}"
+                              ToolTip.Tip="关闭后 AI 对话、Agent 与玩家触发的 AI 均不可用" />
+                    <Grid ColumnDefinitions="Auto,Auto,*">
+                        <TextBlock Grid.Column="0" Text="默认 AI 配置" VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+                        <ComboBox Grid.Column="1" MinWidth="200" SelectedItem="{Binding SelectedDefaultAi}"
+                                  VerticalContentAlignment="Center"
+                                  ToolTip.Tip="未显式指定配置名时使用该实例">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:AiConfigItemViewModel">
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- 配置文件 -->
+            <Border Background="#FFFFFF" BorderBrush="#DDE1E6" BorderThickness="1"
+                    CornerRadius="6" Padding="14">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="sectionTitle" Text="配置文件" FontSize="13" />
+                    <TextBox Text="{Binding ConfigPath}" IsReadOnly="True"
+                             FontFamily="Consolas" FontSize="12" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Content="打开所在目录" MinWidth="110"
+                                Command="{Binding OpenConfigFolderCommand}" />
+                        <Button Content="重新加载配置" MinWidth="110"
+                                Command="{Binding ReloadConfigCommand}" />
+                    </StackPanel>
+                    <TextBlock Classes="hint"
+                               Text="手工编辑配置文件后点击“重新加载配置”即可生效；保存配置时会在同目录留下 .bak 备份。" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

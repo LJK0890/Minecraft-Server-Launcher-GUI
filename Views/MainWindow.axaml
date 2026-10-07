@@ -1,0 +1,178 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MinecraftServerLauncher.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+        x:Class="MinecraftServerLauncher.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Minecraft Server Launcher"
+        Width="1200" Height="740"
+        MinWidth="660" MinHeight="440"
+        WindowDecorations="None"
+        Background="Transparent"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+        <!-- 标题栏右侧的窗口按钮 -->
+        <Style Selector="Button.chrome">
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Margin" Value="1,0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        <Style Selector="Button.chrome:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#33FFFFFF" />
+            <Setter Property="TextBlock.Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.chrome.close:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#E81123" />
+        </Style>
+
+        <!-- 标题栏中间的页面选择标签 -->
+        <Style Selector="ListBox.pageTabs">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="ListBox.pageTabs ListBoxItem">
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Foreground" Value="#D6E2F5" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ListBox.pageTabs ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1FFFFFFF" />
+        </Style>
+        <Style Selector="ListBox.pageTabs ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="TextBlock.Foreground" Value="#1E3F6F" />
+        </Style>
+    </Window.Styles>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="10" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="10" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= 调整大小手柄 ================= -->
+        <Border Grid.Row="0" Grid.Column="0" Name="GripTopLeft"
+                Background="Transparent" Cursor="TopLeftCorner" PointerPressed="Grip_PointerPressed" />
+        <Border Grid.Row="0" Grid.Column="2" Name="GripTopRight"
+                Background="Transparent" Cursor="TopRightCorner" PointerPressed="Grip_PointerPressed" />
+        <Border Grid.Row="3" Grid.Column="0" Name="GripBottomLeft"
+                Background="Transparent" Cursor="BottomLeftCorner" PointerPressed="Grip_PointerPressed" />
+        <Border Grid.Row="3" Grid.Column="2" Name="GripBottomRight"
+                Background="Transparent" Cursor="BottomRightCorner" PointerPressed="Grip_PointerPressed" />
+        <Border Grid.Row="0" Grid.Column="1" Name="GripTop"
+                Background="Transparent" Cursor="SizeNorthSouth" PointerPressed="Grip_PointerPressed" />
+        <Border Grid.Row="3" Grid.Column="1" Name="GripBottom"
+                Background="Transparent" Cursor="SizeNorthSouth" PointerPressed="Grip_PointerPressed" />
+        <Border Grid.Row="1" Grid.Column="0" Name="GripLeft" Grid.RowSpan="2"
+                Background="Transparent" Cursor="SizeWestEast" PointerPressed="Grip_PointerPressed" />
+        <Border Grid.Row="1" Grid.Column="2" Name="GripRight" Grid.RowSpan="2"
+                Background="Transparent" Cursor="SizeWestEast" PointerPressed="Grip_PointerPressed" />
+
+        <!-- ================= 标题栏 ================= -->
+        <Border Grid.Row="1" Grid.Column="1"
+                Height="52"
+                Background="#2B579A"
+                BorderBrush="#1E3F6F"
+                BorderThickness="1,1,1,0"
+                CornerRadius="8,8,0,0"
+                PointerPressed="TitleBar_PointerPressed">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+
+                <!-- 左侧：标题 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal"
+                            VerticalAlignment="Center" Margin="12,0,8,0">
+                    <TextBlock Text="🎮" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center" />
+                    <TextBlock Text="Minecraft Server Launcher"
+                               Foreground="White" FontWeight="Bold" FontSize="13"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- 中间：页面选择 -->
+                <ListBox Grid.Column="1"
+                         Classes="pageTabs"
+                         ItemsSource="{Binding Pages}"
+                         SelectedItem="{Binding SelectedPage}"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Stretch">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PageTab">
+                            <TextBlock Text="{Binding Title}" FontSize="13" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- 右侧：最大化 / 最小化 / 关闭 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0">
+                    <Button Name="MinimizeButton" Classes="chrome" Content="─" ToolTip.Tip="最小化" />
+                    <Button Name="MaximizeButton" Classes="chrome" Content="☐" ToolTip.Tip="最大化 / 还原" />
+                    <Button Name="CloseButton" Classes="chrome close" Content="✕" ToolTip.Tip="关闭" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ================= 页面内容 ================= -->
+        <Border Grid.Row="2" Grid.Column="1"
+                Background="#F5F6F8"
+                BorderBrush="#1E3F6F"
+                BorderThickness="1,0,1,1"
+                CornerRadius="0,0,8,8">
+            <DockPanel>
+
+                <!-- 代理授权提问：有提问挂起时贴在底部，任何页面都可见可答 -->
+                <Border DockPanel.Dock="Bottom"
+                        IsVisible="{Binding IsPromptPending}"
+                        Background="#FFF4CE"
+                        BorderBrush="#E0B400"
+                        BorderThickness="0,1,0,0"
+                        Padding="10,8">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Column="0" Text="⚠ 授权请求：" FontWeight="Bold"
+                                   Foreground="#7A5B00" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="#7A5B00"
+                                   TextWrapping="Wrap"
+                                   Text="AI 请求执行命令，请在下方作答：y=仅本次允许、a=总是允许、n=拒绝（详见控制台日志）" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
+                            <TextBox Width="90" Height="30"
+                                     Text="{Binding PromptResponse}"
+                                     PlaceholderText="y / a / n" VerticalContentAlignment="Center" />
+                            <Button Content="提交" Height="30" Margin="6,0,0,0"
+                                    Command="{Binding SubmitPromptCommand}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- 当前页面 -->
+                <ContentControl Content="{Binding CurrentPageContent}" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,322 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MinecraftServerLauncher.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1260" d:DesignHeight="730"
+             x:Class="MinecraftServerLauncher.Views.ServerConfigPageView"
+             x:DataType="vm:ServerConfigPageViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#333333" />
+        </Style>
+        <Style Selector="TextBlock.subTitle">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#333333" />
+        </Style>
+        <Style Selector="TextBlock.hint">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#8A8A8E" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.fieldLabel">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <!-- 卡片头部与编辑区的小按钮 -->
+        <Style Selector="Button.card">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="MinWidth" Value="62" />
+        </Style>
+        <Style Selector="Button.rowAction">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="MinWidth" Value="48" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel Margin="16" Spacing="14">
+
+            <StackPanel Spacing="4">
+                <TextBlock Classes="sectionTitle" Text="服务器实例配置" />
+                <TextBlock Classes="hint"
+                           Text="每个服务器实例一栏，展开后可编辑启动参数（javaPath / jvmArgs / jarArgs / appendArgs）与 server.properties。新增与移除经命令层执行（$server add / $server rm），与命令行版本共用同一套校验；移除只解除登记，不会删除磁盘上的服务器目录。" />
+            </StackPanel>
+
+            <!-- 新增实例 -->
+            <Border Background="#FFFFFF" BorderBrush="#DDE1E6" BorderThickness="1"
+                    CornerRadius="6" Padding="14">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="subTitle" Text="新增实例" />
+                    <Grid ColumnDefinitions="Auto,*,Auto,*,Auto" ColumnSpacing="8">
+                        <TextBlock Grid.Column="0" Classes="fieldLabel" Text="名称" />
+                        <TextBox Grid.Column="1" MinWidth="140"
+                                 Text="{Binding NewServerName}"
+                                 PlaceholderText="例如 survival" />
+                        <TextBlock Grid.Column="2" Classes="fieldLabel" Text="目录路径" />
+                        <TextBox Grid.Column="3" MinWidth="300"
+                                 Text="{Binding NewServerPath}"
+                                 PlaceholderText="例如 D:\Minecraft\survival" />
+                        <Button Grid.Column="4" Content="新增" MinWidth="80"
+                                Command="{Binding AddServerCommand}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- 实例卡片列表 -->
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6">
+                    <TextBlock Grid.Column="0" Classes="subTitle" Text="已登记的实例" FontSize="13"
+                               VerticalAlignment="Center" />
+                    <Button Grid.Column="1" Classes="rowAction" Content="全部展开"
+                            Command="{Binding ExpandAllCardsCommand}" />
+                    <Button Grid.Column="2" Classes="rowAction" Content="全部收起"
+                            Command="{Binding CollapseAllCardsCommand}" />
+                    <Button Grid.Column="3" Classes="rowAction" Content="重新加载"
+                            Command="{Binding ReloadCommand}" />
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding Editors}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ServerEditorViewModel">
+
+                            <!-- 一个实例 = 一栏 -->
+                            <Border Background="#FFFFFF" BorderBrush="#DDE1E6" BorderThickness="1"
+                                    CornerRadius="6" Margin="0,0,0,10">
+                                <StackPanel>
+
+                                    <!-- 卡片头：点击这一行即可展开 / 收起；右侧按钮独立响应，不会误触展开 -->
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Border Grid.Column="0" Background="Transparent" Cursor="Hand"
+                                                Padding="14,10" Tapped="OnCardHeaderTapped"
+                                                ToolTip.Tip="点击展开 / 收起该实例的启动参数与 server.properties">
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <TextBlock Grid.Column="0" Text="{Binding ExpandGlyph}"
+                                                           FontSize="12" Foreground="#8A8A8E"
+                                                           VerticalAlignment="Top" Margin="0,2,8,0" />
+                                                <StackPanel Grid.Column="1" Spacing="2">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Item.StatusText}" FontSize="11"
+                                                                   Foreground="{Binding Item.StatusColor}"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="已锁定" FontSize="11" Foreground="#B26A00"
+                                                                   VerticalAlignment="Center"
+                                                                   IsVisible="{Binding Item.IsLocked}" />
+                                                        <TextBlock Text="输出已隐藏" FontSize="11" Foreground="#8A8A8E"
+                                                                   VerticalAlignment="Center"
+                                                                   IsVisible="{Binding Item.IsHidden}" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Path}" FontSize="11" Foreground="#8A8A8E"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               ToolTip.Tip="{Binding Path}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6"
+                                                    VerticalAlignment="Center" Margin="0,0,14,0">
+                                            <Button Classes="card" Content="{Binding Item.StartStopText}"
+                                                    Command="{Binding Item.ToggleStartStopCommand}"
+                                                    ToolTip.Tip="启动 / 停止该服务器实例" />
+                                            <Button Classes="card" Content="{Binding Item.LockText}"
+                                                    Command="{Binding Item.ToggleLockCommand}"
+                                                    ToolTip.Tip="锁定后禁止 run/stop/send/rm/del" />
+                                            <Button Classes="card" Content="{Binding Item.HideText}"
+                                                    Command="{Binding Item.ToggleHideCommand}"
+                                                    ToolTip.Tip="隐藏 / 显示该服务器在控制台中的输出" />
+                                            <Button Classes="card" Content="移除"
+                                                    Command="{Binding Item.RemoveCommand}"
+                                                    ToolTip.Tip="从配置中移除该实例（不删除磁盘目录）" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- 展开区 -->
+                                    <Border Background="#FAFBFC" BorderBrush="#EDEFF2" BorderThickness="0,1,0,0"
+                                            Padding="14" IsVisible="{Binding IsExpanded}">
+                                        <StackPanel Spacing="16">
+
+                                            <!-- 启动参数 -->
+                                            <StackPanel Spacing="8">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBlock Grid.Column="0" Classes="subTitle" Text="启动参数" />
+                                                    <Button Grid.Column="1" Classes="rowAction" Content="重新读取"
+                                                            Command="{Binding ReloadCommand}"
+                                                            ToolTip.Tip="放弃未保存的输入，重新从磁盘读取" />
+                                                </Grid>
+
+                                                <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto"
+                                                      ColumnSpacing="8" RowSpacing="8">
+                                                    <TextBlock Grid.Row="0" Grid.Column="0" Classes="fieldLabel"
+                                                               Text="Java 路径" />
+                                                    <TextBox Grid.Row="0" Grid.Column="1" FontFamily="Consolas"
+                                                             FontSize="12" Text="{Binding JavaPath}" />
+                                                    <Button Grid.Row="0" Grid.Column="2" Classes="rowAction"
+                                                            Content="应用" Command="{Binding ApplyJavaPathCommand}" />
+                                                </Grid>
+
+                                                <!-- JVM 参数 -->
+                                                <TextBlock Classes="hint"
+                                                           Text="JVM 参数（写入 user_jvm_args.txt，逐条保存）" />
+                                                <ItemsControl ItemsSource="{Binding JvmArgs}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:ArgumentItemViewModel">
+                                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6"
+                                                                  Margin="0,0,0,4">
+                                                                <TextBox Grid.Column="0" FontFamily="Consolas"
+                                                                         FontSize="12" Text="{Binding Value}" />
+                                                                <Button Grid.Column="1" Classes="rowAction"
+                                                                        Content="保存"
+                                                                        Command="{Binding SaveCommand}"
+                                                                        IsEnabled="{Binding IsDirty}" />
+                                                                <Button Grid.Column="2" Classes="rowAction"
+                                                                        Content="删除"
+                                                                        Command="{Binding RemoveCommand}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                                    <TextBox Grid.Column="0" FontFamily="Consolas" FontSize="12"
+                                                             Text="{Binding NewJvmArg}"
+                                                             PlaceholderText="新增 JVM 参数，例如 -Xmx8G" />
+                                                    <Button Grid.Column="1" Classes="rowAction" Content="添加"
+                                                            Command="{Binding AddJvmArgCommand}" />
+                                                </Grid>
+
+                                                <!-- jar 参数：排在 JVM 参数之后 -->
+                                                <Grid ColumnDefinitions="Auto,*,Auto"
+                                                      ColumnSpacing="8" Margin="0,4,0,0">
+                                                    <TextBlock Grid.Column="0" Classes="fieldLabel"
+                                                               Text="jar 参数" />
+                                                    <TextBox Grid.Column="1" FontFamily="Consolas"
+                                                             FontSize="12" Text="{Binding JarArgs}" />
+                                                    <Button Grid.Column="2" Classes="rowAction"
+                                                            Content="应用" Command="{Binding ApplyJarArgsCommand}" />
+                                                </Grid>
+
+                                                <!-- 附加参数 -->
+                                                <TextBlock Classes="hint" Text="附加参数（例如 nogui，逐条保存）" />
+                                                <ItemsControl ItemsSource="{Binding AppendArgs}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:ArgumentItemViewModel">
+                                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6"
+                                                                  Margin="0,0,0,4">
+                                                                <TextBox Grid.Column="0" FontFamily="Consolas"
+                                                                         FontSize="12" Text="{Binding Value}" />
+                                                                <Button Grid.Column="1" Classes="rowAction"
+                                                                        Content="保存"
+                                                                        Command="{Binding SaveCommand}"
+                                                                        IsEnabled="{Binding IsDirty}" />
+                                                                <Button Grid.Column="2" Classes="rowAction"
+                                                                        Content="删除"
+                                                                        Command="{Binding RemoveCommand}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                                    <TextBox Grid.Column="0" FontFamily="Consolas" FontSize="12"
+                                                             Text="{Binding NewAppendArg}"
+                                                             PlaceholderText="新增附加参数，例如 nogui" />
+                                                    <Button Grid.Column="1" Classes="rowAction" Content="添加"
+                                                            Command="{Binding AddAppendArgCommand}" />
+                                                </Grid>
+
+                                                <!-- 预览 -->
+                                                <StackPanel Spacing="4">
+                                                    <TextBlock Classes="hint" Text="完整启动命令（下次启动生效）" />
+                                                    <Border Background="#F1F3F6" CornerRadius="4" Padding="8,6">
+                                                        <TextBlock Text="{Binding StartPreview}"
+                                                                   FontFamily="Consolas" FontSize="12"
+                                                                   Foreground="#333333" TextWrapping="Wrap" />
+                                                    </Border>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <!-- server.properties -->
+                                            <StackPanel Spacing="8">
+                                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                                    <TextBlock Grid.Column="0" Classes="subTitle"
+                                                               Text="服务器配置（server.properties）"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBox Grid.Column="1" FontSize="12"
+                                                             Text="{Binding PropertyFilter}"
+                                                             PlaceholderText="过滤键或值" />
+                                                    <TextBlock Grid.Column="2" Classes="hint"
+                                                               VerticalAlignment="Center"
+                                                               Text="{Binding PropertyCountText}" />
+                                                </Grid>
+
+                                                <TextBlock Classes="hint" Foreground="#B26A00"
+                                                           IsVisible="{Binding !HasProperties}"
+                                                           Text="server.properties 不存在或为空，可在下方新增配置项。" />
+
+                                                <ScrollViewer MaxHeight="300">
+                                                    <StackPanel>
+                                                        <Grid ColumnDefinitions="1.1*,2*,Auto,Auto" ColumnSpacing="6"
+                                                              Margin="0,0,0,4" IsVisible="{Binding HasProperties}">
+                                                            <TextBlock Grid.Column="0" Classes="hint" Text="键" />
+                                                            <TextBlock Grid.Column="1" Classes="hint" Text="值" />
+                                                        </Grid>
+                                                        <ItemsControl ItemsSource="{Binding Properties}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="vm:PropertyItemViewModel">
+                                                                    <Grid ColumnDefinitions="1.1*,2*,Auto,Auto"
+                                                                          ColumnSpacing="6" Margin="0,0,0,4">
+                                                                        <TextBlock Grid.Column="0"
+                                                                                   Text="{Binding Key}"
+                                                                                   FontFamily="Consolas"
+                                                                                   FontSize="12"
+                                                                                   VerticalAlignment="Center"
+                                                                                   TextTrimming="CharacterEllipsis"
+                                                                                   ToolTip.Tip="{Binding Key}" />
+                                                                        <TextBox Grid.Column="1" FontFamily="Consolas"
+                                                                                 FontSize="12"
+                                                                                 Text="{Binding Value}" />
+                                                                        <Button Grid.Column="2" Classes="rowAction"
+                                                                                Content="保存"
+                                                                                Command="{Binding SaveCommand}"
+                                                                                IsEnabled="{Binding IsDirty}" />
+                                                                        <Button Grid.Column="3" Classes="rowAction"
+                                                                                Content="删除"
+                                                                                Command="{Binding RemoveCommand}" />
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </StackPanel>
+                                                </ScrollViewer>
+
+                                                <Grid ColumnDefinitions="1.1*,2*,Auto" ColumnSpacing="6">
+                                                    <TextBox Grid.Column="0" FontFamily="Consolas" FontSize="12"
+                                                             Text="{Binding NewPropertyKey}"
+                                                             PlaceholderText="新键，例如 motd" />
+                                                    <TextBox Grid.Column="1" FontFamily="Consolas" FontSize="12"
+                                                             Text="{Binding NewPropertyValue}"
+                                                             PlaceholderText="值" />
+                                                    <Button Grid.Column="2" Classes="rowAction" Content="新增"
+                                                            Command="{Binding AddPropertyCommand}" />
+                                                </Grid>
+
+                                                <TextBlock Classes="hint"
+                                                           Text="修改会立即写入该实例目录下的 server.properties；“保存”按钮仅在内容改动过时可点。" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

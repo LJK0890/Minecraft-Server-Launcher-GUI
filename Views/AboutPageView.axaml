@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MinecraftServerLauncher.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1260" d:DesignHeight="730"
+             x:Class="MinecraftServerLauncher.Views.AboutPageView"
+             x:DataType="vm:AboutPageViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#333333" />
+        </Style>
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#8A8A8E" />
+        </Style>
+        <Style Selector="TextBlock.value">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#333333" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel Margin="16" Spacing="14">
+
+            <StackPanel Spacing="4">
+                <TextBlock Classes="sectionTitle" Text="{Binding AppName}" FontSize="20" />
+                <TextBlock Classes="label" Text="Minecraft 服务器管理器（MSL-CLI 的图形前端）" />
+            </StackPanel>
+
+            <Border Background="#FFFFFF" BorderBrush="#DDE1E6" BorderThickness="1"
+                    CornerRadius="6" Padding="14">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="sectionTitle" Text="运行信息" FontSize="13" />
+
+                    <Grid ColumnDefinitions="120,*">
+                        <TextBlock Grid.Column="0" Classes="label" Text="版本" />
+                        <TextBlock Grid.Column="1" Classes="value" Text="{Binding Version}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="120,*">
+                        <TextBlock Grid.Column="0" Classes="label" Text="运行环境" />
+                        <TextBlock Grid.Column="1" Classes="value" Text="{Binding Runtime}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="120,*">
+                        <TextBlock Grid.Column="0" Classes="label" Text="配置文件" />
+                        <TextBlock Grid.Column="1" Classes="value" Text="{Binding ConfigPath}"
+                                   FontFamily="Consolas" />
+                    </Grid>
+                    <Grid ColumnDefinitions="120,*">
+                        <TextBlock Grid.Column="0" Classes="label" Text="数据规模" />
+                        <TextBlock Grid.Column="1" Classes="value" Text="{Binding DataSummary}" />
+                    </Grid>
+
+                    <Button Name="CopyEnvironmentButton" Content="复制环境信息" MinWidth="120"
+                            HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+
+            <Border Background="#FFFFFF" BorderBrush="#DDE1E6" BorderThickness="1"
+                    CornerRadius="6" Padding="14">
+                <StackPanel Spacing="8">
+                    <TextBlock Classes="sectionTitle" Text="说明" FontSize="13" />
+                    <TextBlock Classes="value" Text="{Binding Description}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

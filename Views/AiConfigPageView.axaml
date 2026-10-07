@@ -1,0 +1,270 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MinecraftServerLauncher.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1260" d:DesignHeight="730"
+             x:Class="MinecraftServerLauncher.Views.AiConfigPageView"
+             x:DataType="vm:AiConfigPageViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#333333" />
+        </Style>
+        <Style Selector="TextBlock.subTitle">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#333333" />
+        </Style>
+        <Style Selector="TextBlock.hint">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#8A8A8E" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.fieldLabel">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.card">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="MinWidth" Value="62" />
+        </Style>
+        <Style Selector="Button.rowAction">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="MinWidth" Value="48" />
+        </Style>
+        <Style Selector="TextBox.prompt">
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="MaxHeight" Value="170" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel Margin="16" Spacing="14">
+
+            <StackPanel Spacing="4">
+                <TextBlock Classes="sectionTitle" Text="AI 实例配置" />
+                <TextBlock Classes="hint"
+                           Text="每个 AI 实例一栏，点击这一行展开后可编辑地址、模型、密钥、迭代上限与三段提示词。关闭“对话”或“Agent”后，主页面控制台对应的发送方式会被锁定，只能使用仍然开启的那一种；开关改动会立即写盘并热更新到运行中的 AI 服务。" />
+            </StackPanel>
+
+            <!-- 新增实例 -->
+            <Border Background="#FFFFFF" BorderBrush="#DDE1E6" BorderThickness="1"
+                    CornerRadius="6" Padding="14">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="subTitle" Text="新增实例" />
+                    <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto"
+                          ColumnSpacing="8" RowSpacing="8">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="fieldLabel" Text="名称" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding NewAiName}"
+                                 PlaceholderText="例如 ds" />
+                        <TextBlock Grid.Row="0" Grid.Column="2" Classes="fieldLabel" Text="模型" />
+                        <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding NewAiModel}"
+                                 PlaceholderText="deepseek-chat" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Classes="fieldLabel" Text="API 地址" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding NewAiUrl}"
+                                 PlaceholderText="https://api.deepseek.com/v1" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Classes="fieldLabel" Text="密钥环境变量" />
+                        <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding NewAiApiKeyEnv}"
+                                 PlaceholderText="可留空" />
+
+                        <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4"
+                                Content="新增" MinWidth="90" HorizontalAlignment="Right"
+                                Command="{Binding AddAiCommand}" />
+                    </Grid>
+                    <TextBlock Classes="hint"
+                               Text="留空密钥环境变量时，展开实例后可在“密钥”一节填写。" />
+                </StackPanel>
+            </Border>
+
+            <!-- 实例卡片列表 -->
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                        <TextBlock Classes="subTitle" Text="已登记的实例" FontSize="13"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Classes="hint" VerticalAlignment="Center"
+                                   Text="{Binding DefaultAiName, StringFormat='当前默认配置：{0}'}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Classes="rowAction" Content="全部展开"
+                            Command="{Binding ExpandAllCardsCommand}" />
+                    <Button Grid.Column="2" Classes="rowAction" Content="全部收起"
+                            Command="{Binding CollapseAllCardsCommand}" />
+                    <Button Grid.Column="3" Classes="rowAction" Content="重新加载"
+                            Command="{Binding ReloadCommand}" />
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding AiConfigs}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:AiConfigItemViewModel">
+
+                            <!-- 一个 AI 实例 = 一栏 -->
+                            <Border Background="#FFFFFF" BorderBrush="#DDE1E6" BorderThickness="1"
+                                    CornerRadius="6" Margin="0,0,0,10">
+                                <StackPanel>
+
+                                    <!-- 卡片头：点击这一行展开 / 收起；右侧控件是兄弟节点，不会误触 -->
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Border Grid.Column="0" Background="Transparent" Cursor="Hand"
+                                                Padding="14,10" Tapped="OnCardHeaderTapped"
+                                                ToolTip.Tip="点击展开 / 收起该实例的连接信息、密钥、参数与提示词">
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <TextBlock Grid.Column="0" Text="{Binding ExpandGlyph}"
+                                                           FontSize="12" Foreground="#8A8A8E"
+                                                           VerticalAlignment="Top" Margin="0,2,8,0" />
+                                                <StackPanel Grid.Column="1" Spacing="2">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14"
+                                                                   VerticalAlignment="Center" />
+                                                        <Border Background="#E3EDFB" CornerRadius="3" Padding="5,1"
+                                                                VerticalAlignment="Center"
+                                                                IsVisible="{Binding IsDefault}">
+                                                            <TextBlock Text="默认" FontSize="10" Foreground="#2B579A" />
+                                                        </Border>
+                                                        <TextBlock Text="{Binding Model}" FontSize="11"
+                                                                   Foreground="#555555"
+                                                                   VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="{Binding Url}" FontSize="11"
+                                                                   Foreground="#8A8A8E"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   ToolTip.Tip="{Binding Url}" />
+                                                        <TextBlock Text="{Binding CapabilityText}" FontSize="11"
+                                                                   Foreground="#8A8A8E" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10"
+                                                    VerticalAlignment="Center" Margin="0,0,14,0">
+                                            <CheckBox Content="对话" IsChecked="{Binding EnableChat}"
+                                                      VerticalAlignment="Center"
+                                                      ToolTip.Tip="关闭后该实例不能用于对话（主页面会锁定为只能用 Agent）" />
+                                            <CheckBox Content="Agent" IsChecked="{Binding EnableAgent}"
+                                                      VerticalAlignment="Center"
+                                                      ToolTip.Tip="关闭后该实例不能用于 Agent（主页面会锁定为只能对话）" />
+                                            <Button Classes="card" Content="设为默认"
+                                                    Command="{Binding SetDefaultCommand}"
+                                                    IsEnabled="{Binding !IsDefault}" />
+                                            <Button Classes="card" Content="删除"
+                                                    Command="{Binding RemoveCommand}" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- 展开区 -->
+                                    <Border Background="#FAFBFC" BorderBrush="#EDEFF2" BorderThickness="0,1,0,0"
+                                            Padding="14" IsVisible="{Binding IsExpanded}">
+                                        <StackPanel Spacing="16">
+
+                                            <!-- 连接信息 -->
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Classes="subTitle" Text="连接信息" />
+                                                <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto"
+                                                      ColumnSpacing="8" RowSpacing="8">
+                                                    <TextBlock Grid.Row="0" Grid.Column="0" Classes="fieldLabel"
+                                                               Text="API 地址" />
+                                                    <TextBox Grid.Row="0" Grid.Column="1" FontFamily="Consolas"
+                                                             FontSize="12" Text="{Binding UrlInput}" />
+                                                    <Button Grid.Row="0" Grid.Column="2" Classes="rowAction"
+                                                            Content="应用" Command="{Binding ApplyBasicsCommand}" />
+
+                                                    <TextBlock Grid.Row="1" Grid.Column="0" Classes="fieldLabel"
+                                                               Text="模型" />
+                                                    <TextBox Grid.Row="1" Grid.Column="1" FontFamily="Consolas"
+                                                             FontSize="12" Text="{Binding ModelInput}" />
+                                                    <Button Grid.Row="1" Grid.Column="2" Classes="rowAction"
+                                                            Content="应用" Command="{Binding ApplyBasicsCommand}" />
+                                                </Grid>
+                                            </StackPanel>
+
+                                            <!-- 密钥 -->
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Classes="subTitle" Text="密钥" />
+                                                <CheckBox Content="从环境变量读取（UseApiKeyEnv）"
+                                                          IsChecked="{Binding UseApiKeyEnv}" />
+                                                <TextBlock Classes="hint" Text="{Binding KeyFieldHint}" />
+                                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                                    <TextBlock Grid.Column="0" Classes="fieldLabel" Text="环境变量名"
+                                                               IsVisible="{Binding UseApiKeyEnv}" />
+                                                    <TextBox Grid.Column="1" FontFamily="Consolas" FontSize="12"
+                                                             Text="{Binding ApiKeyEnvInput}"
+                                                             IsVisible="{Binding UseApiKeyEnv}"
+                                                             PlaceholderText="例如 DEEPSEEK_API_KEY" />
+                                                    <TextBlock Grid.Column="0" Classes="fieldLabel" Text="密钥"
+                                                               IsVisible="{Binding !UseApiKeyEnv}" />
+                                                    <TextBox Grid.Column="1" FontFamily="Consolas" FontSize="12"
+                                                             Text="{Binding ApiKeyInput}"
+                                                             IsVisible="{Binding !UseApiKeyEnv}"
+                                                             PlaceholderText="明文保存到配置文件" />
+                                                    <Button Grid.Column="2" Classes="rowAction" Content="应用"
+                                                            Command="{Binding ApplyKeyCommand}" />
+                                                </Grid>
+                                            </StackPanel>
+
+                                            <!-- 代理参数 -->
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Classes="subTitle" Text="代理参数" />
+                                                <Grid ColumnDefinitions="Auto,*,Auto,*,Auto" ColumnSpacing="8">
+                                                    <TextBlock Grid.Column="0" Classes="fieldLabel"
+                                                               Text="最大迭代次数" />
+                                                    <TextBox Grid.Column="1" FontFamily="Consolas" FontSize="12"
+                                                             Text="{Binding MaxIterationsInput}" />
+                                                    <TextBlock Grid.Column="2" Classes="fieldLabel"
+                                                               Text="上下文压缩阈值" />
+                                                    <TextBox Grid.Column="3" FontFamily="Consolas" FontSize="12"
+                                                             Text="{Binding MaxContextTokensInput}" />
+                                                    <Button Grid.Column="4" Classes="rowAction" Content="应用"
+                                                            Command="{Binding ApplyLimitsCommand}" />
+                                                </Grid>
+                                                <TextBlock Classes="hint"
+                                                           Text="上下文压缩阈值单位为估算 token 数，0 表示关闭自动压缩。" />
+                                            </StackPanel>
+
+                                            <!-- 提示词 -->
+                                            <StackPanel Spacing="8">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBlock Grid.Column="0" Classes="subTitle" Text="提示词" />
+                                                    <Button Grid.Column="1" Classes="rowAction"
+                                                            Content="恢复内置默认"
+                                                            Command="{Binding ResetPromptsCommand}"
+                                                            ToolTip.Tip="清空自定义内容，改用程序内置的默认提示词" />
+                                                </Grid>
+
+                                                <TextBlock Classes="hint"
+                                                           Text="聊天模式提示词（{commandList} 会替换为命令摘要）" />
+                                                <TextBox Classes="prompt" Text="{Binding ChatPromptInput}" />
+
+                                                <TextBlock Classes="hint"
+                                                           Text="代理提示词（{commandList} 会替换为命令摘要）" />
+                                                <TextBox Classes="prompt" Text="{Binding AgentPromptInput}" />
+
+                                                <TextBlock Classes="hint"
+                                                           Text="上下文压缩提示词（{transcript} 会替换为待压缩的执行记录，留空用内置默认）" />
+                                                <TextBox Classes="prompt" Text="{Binding CompressPromptInput}" />
+
+                                                <Button Classes="rowAction" HorizontalAlignment="Left"
+                                                        Content="应用提示词"
+                                                        Command="{Binding ApplyPromptsCommand}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

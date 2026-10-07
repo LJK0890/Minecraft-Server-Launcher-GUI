@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="MinecraftServerLauncher.csproj">
+    <BuildType Project="Debug" />
+  </Project>
+</Solution>
